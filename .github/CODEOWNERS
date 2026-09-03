@@ -1,0 +1,31 @@
+# Code owners for this repository.
+#
+# `@catincloudlabs` is a USER account, not the `catincloud-labs` organization
+# that owns this repository. CODEOWNERS resolves users and teams; an
+# organization name on its own is not a valid owner, and this organization has
+# no teams, so a `@catincloud-labs/<team>` entry would resolve to nothing
+# silently.
+#
+# THIS FILE IS LIVE THE MOMENT IT EXISTS, and the mechanism is not in this
+# repository. Code-owner review is required by an organisation-level ruleset
+# that targets every repository's default branch -- so the rule was already on
+# here and doing nothing, because a rule that names code owners is INERT where
+# no CODEOWNERS file exists. Adding the file is what switches it on.
+#
+# Consequence while the organisation has one human, stated because it is
+# surprising rather than because it is a defect: the entry below makes the
+# owner the code owner of every path, and GitHub does not let an author approve
+# their own pull request. So the requirement is UNSATISFIABLE here, every merge
+# is an owner bypass, and a bypass count carries no information until a second
+# person exists who could have supplied the approval instead. That is intended
+# -- the rule is aimed at a future contributor, not at the owner. Decided, for
+# this repository, when it was created: the page is the organisation's own
+# voice, and a second approver on it is a later decision, not a default.
+#
+# An entry naming an account WITHOUT write access is not rejected: it is
+# reported as "Unknown owner" and does nothing. `codeowners/errors` is what says
+# so, and it does NOT distinguish a misspelled name from a real account missing
+# the grant. Its 404 does not mean "no file" either -- a freshly landed file can
+# read as absent for about a day, so verify on the BRANCH before merging.
+
+* @catincloudlabs

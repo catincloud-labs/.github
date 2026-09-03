@@ -1,0 +1,34 @@
+# This repository holds one page and its furniture, not a build. A stock
+# language template was deliberately not carried in, on the principle that an
+# ignore file full of rules that cannot fire teaches the next reader to skim
+# it. Everything below is here because the incident it prevents is possible.
+
+# Environment and key material. Nothing here needs credentials, which is
+# exactly when this is cheap to add: a key committed once is compromised even
+# after the file is deleted, so the rule has to predate the key rather than
+# follow it. This repository is public, which makes the point sharper.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+id_rsa
+id_ed25519
+keys.txt
+
+# Local agent configuration. Deliberately untracked: settings files here
+# accumulate machine-specific absolute paths and permission allowlists, which
+# are a property of one workstation rather than of this project.
+.claude/
+
+# Python byte cache. `scripts/` holds the vendored checks, and running them
+# locally writes this. A `.pyc` reached a sibling repository's index the same
+# day its `scripts/` directory was added, so this is a rule rather than a
+# claim that it cannot happen.
+__pycache__/
+*.py[cod]
+
+# OS junk
+.DS_Store
+Thumbs.db

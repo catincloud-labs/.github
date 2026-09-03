@@ -1,0 +1,18 @@
+# A third-party action is pinned to a commit, and the pin has a mover. This is
+# the mover. GitHub Actions only, grouped monthly, so a bump is one pull request
+# a month that a reviewer reads as a diff of commit hashes and version comments;
+# the `third-party pins` job in `checks.yml` is what makes that reading mean
+# something. The shape of this entry is shared across the organisation's
+# repositories and is copied here rather than written; if it drifts from the
+# others, reconcile to theirs.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "chore(deps)"

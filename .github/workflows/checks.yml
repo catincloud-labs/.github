@@ -1,0 +1,270 @@
+name: checks
+
+# `edited` is here on purpose. A body edit is the normal way an unacknowledged
+# close gets introduced or removed, and an early version of this gate omitted
+# it -- so a corrected body never re-ran, and a broken one never re-checked.
+# `synchronize` covers pushes to the branch.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+  # `issues: read` is what makes `closingIssuesReferences` return anything at
+  # all. Without it the field resolves to an EMPTY LIST rather than erroring, and
+  # the reconcile step reads that as "merging this closes nothing" -- so the
+  # check cannot tell *no closing reference* from *cannot see one*.
+  #
+  # The silent half is the dangerous one. A stray closing keyword in the prose
+  # under an `Autoclose: none` trailer reconciles CLEAN, because a blind
+  # "nothing" agrees with a trailer claiming nothing. That is precisely the case
+  # this guard exists to catch, and without this line it cannot fire.
+  #
+  # `permissions:` is a property of the CALLING workflow and a composite action
+  # cannot grant itself a scope, so this block lives here and not in any shared
+  # place.
+  issues: read
+
+# The job names below are load-bearing. `markdown` and `closing keywords` are
+# the literal strings the organisation's required-checks ruleset demands of
+# every repository. A rename does not fail -- the check simply never reports,
+# and a check that never reports never blocks a merge. The gate would go quiet
+# rather than red.
+#
+# ---------------------------------------------------------------------------
+# WHY THE JOBS ARE WRITTEN OUT HERE INSTEAD OF CALLING A SHARED ACTION
+#
+# The organisation's other repositories call composite actions from a shared
+# private repository. A workflow in a PUBLIC repository cannot resolve an
+# action in a private one -- measured on the organisation's first public
+# repository, not assumed:
+#
+#   ##[error]Unable to resolve action `<org>/<shared>`, not found
+#
+# It fails at `Set up job`, before any step runs, so both required checks fail
+# on every pull request and nothing can merge. The rulesets match on CONTEXT
+# STRING alone, so a job named `markdown` here satisfies exactly the same
+# requirement the shared one does. Gate strength is unchanged; what changed is
+# where the code lives.
+#
+# THE COST, STATED: the check logic exists in two places, and this one cannot
+# see the other. The shared action compares a repository's vendored guard
+# byte-for-byte against its source on every run; that step cannot work from
+# here. It has not been dropped. A private job reads this public repository
+# and compares the vendored files below against their canonical copies, so
+# drift is caught after it lands rather than blocked on the pull request that
+# introduces it:
+#
+#   scripts/check_closing_keywords.py
+#   scripts/test_check_closing_keywords.py
+#   scripts/check_pr_title.py
+#   scripts/check_third_party_pins.py
+#   scripts/test_check_third_party_pins.py
+#   .github/markdownlint.json
+#
+# So do NOT edit those files to suit local taste. They are copies, they are
+# checked, and the check is somewhere you cannot see from this file.
+# ---------------------------------------------------------------------------
+jobs:
+  markdown:
+    name: markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The globs name what this repository actually has: the root, the
+      # `.github/` furniture, and the one page under `profile/`. A glob
+      # matching nothing is noise rather than coverage.
+      #
+      # The config is passed explicitly and lives at `.github/markdownlint.json`
+      # rather than at the repository root. A root `.markdownlint.json` is
+      # auto-discovered and outranks any shared default, so a copy of the shared
+      # rules sitting there would read as this repository having DECIDED its own
+      # lint rules. It has decided nothing. It is carrying a copy because it
+      # cannot reach the original, and the location says which of those is true.
+      #
+      # Without `--config` the CLI falls back to its own defaults, where MD013
+      # and MD041 are both ON -- so a wrong path must fail loudly rather than
+      # lint quietly against the wrong rules. A missing file gives ENOENT.
+      - name: markdownlint
+        run: npx -y markdownlint-cli2 --config .github/markdownlint.json '*.md' '.github/**/*.md' 'profile/**/*.md'
+
+  closing-keywords:
+    name: closing keywords
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The guard's own self-test runs before the guard does. A checker that has
+      # silently stopped detecting anything passes every pull request, which is
+      # the one failure mode this job cannot otherwise observe.
+      #
+      # Vendored, like the guard beside it, and for the same reason: this
+      # repository cannot call the shared action. Both files are compared
+      # against their source from the private side -- see the note at the head
+      # of this file -- so neither is edited here.
+      - name: Guard fires and goes quiet
+        run: python scripts/test_check_closing_keywords.py
+
+      - name: Scan the pull request body
+        run: |
+          gh pr view "$PR" --json body -q .body > "$RUNNER_TEMP/pr-body.md"
+          python scripts/check_closing_keywords.py "$RUNNER_TEMP/pr-body.md"
+
+      - name: Scan every commit message in the pull request
+        run: |
+          gh pr view "$PR" --json commits \
+            -q '.commits[].messageHeadline + "\n" + .commits[].messageBody' \
+            > "$RUNNER_TEMP/pr-commits.txt"
+          python scripts/check_closing_keywords.py "$RUNNER_TEMP/pr-commits.txt"
+
+      # The regex above is our reimplementation; this is the authority. When the
+      # two disagree, believe this one -- but read the reported line before
+      # believing the disagreement, because the field lags a body edit by tens of
+      # seconds and reads empty right after a pull request opens.
+      - name: Ask GitHub what it will actually close
+        run: |
+          # This step fetches; it does not decide. Reading the trailer and
+          # comparing the two sets is the guard's rule, so it lives in the script
+          # and is exercised by the self-test above.
+          #
+          # KEY: do not add a second reader here. A workflow once grew its own
+          # `grep` for the trailer alongside the script's `find_acknowledged()`,
+          # and the two disagreed -- the grep was anchored at line start and not
+          # fence-aware, so a body that merely SHOWED an example trailer failed
+          # CI, which is the exact case the self-test pins as clean. If the rule
+          # needs to change, change it in the script.
+          gh pr view "$PR" --json body -q .body > "$RUNNER_TEMP/pr-body-reconcile.md"
+
+          attempt() {
+            reported="$(
+              gh pr view "$PR" --json closingIssuesReferences \
+                -q '[.closingIssuesReferences[].number] | sort | join(",")'
+            )"
+            python scripts/check_closing_keywords.py \
+              --github-closes "$reported" \
+              "$RUNNER_TEMP/pr-body-reconcile.md" \
+              > "$RUNNER_TEMP/reconcile.txt" 2>&1
+          }
+
+          # The field lags a body edit by tens of seconds and reads empty right
+          # after a pull request opens, so one disagreement is not believed until
+          # it has been asked again. Timing is this step's business; the verdict
+          # is not.
+          if attempt; then
+            cat "$RUNNER_TEMP/reconcile.txt"
+            exit 0
+          fi
+
+          echo "Disagreement on first read; the field lags an edit. Re-asking in 30s."
+          sleep 30
+
+          if attempt; then
+            cat "$RUNNER_TEMP/reconcile.txt"
+            exit 0
+          fi
+
+          cat "$RUNNER_TEMP/reconcile.txt"
+          echo "::error::GitHub and the Autoclose trailer disagree about what merging this will close."
+          exit 1
+
+  # Vendored for the same reason as the two jobs above it: this public
+  # repository cannot resolve the private shared action, and the rulesets it
+  # answers to match on context strings a local job can carry. Unlike those
+  # two this context is NOT required by any ruleset -- the gate is advisory
+  # red, which is still more than the prose that held the rule alone until
+  # now (a convention held only by text died estate-wide in a day once, and
+  # that measurement is why the guard exists).
+  #
+  # `scripts/check_pr_title.py` is a byte-identical copy of the guard in the
+  # private shared repository, compared from the private side like the other
+  # vendored files -- do not edit it here. The self-test runs first, so a
+  # checker that silently stopped detecting anything cannot pass a title.
+  pr-title:
+    name: pr title
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Guard fires and goes quiet
+        run: python scripts/check_pr_title.py --self-test
+
+      # The title reaches the script through the environment, never
+      # interpolated into shell -- a title is attacker-adjacent text on a
+      # public repository.
+      - name: Judge the title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: python scripts/check_pr_title.py --title "$PR_TITLE" --author "$PR_AUTHOR"
+
+  # Every third-party action ref in this tree is a forty-character commit with
+  # its version as a trailing comment, from a publisher the organisation has
+  # enumerated. VENDORED, like the guards above and for the same reason: this
+  # repository is public and cannot resolve the private action, so the scanner
+  # runs from `scripts/`, and the private side holds both files to their
+  # canonical copies. Do not edit them here. Dependabot
+  # (`.github/dependabot.yml`) is the mover; this is what makes a hand edit at
+  # a tag visible.
+  #
+  # Not a required check: making it one is the owner's decision to take with
+  # the blocking cost in view.
+  third-party-pins:
+    name: third-party pins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The guard's own self-test runs before the guard does, here rather
+      # than trusted to have run once where the checker was authored.
+      - name: Guard fires and goes quiet
+        run: python3 scripts/test_check_third_party_pins.py
+
+      - name: Every third-party ref in this tree is a commit with its version
+        run: python3 scripts/check_third_party_pins.py --org catincloud-labs --tree .
+
+  # This repository is public, and everything it publishes is ASCII: a page
+  # with an em-dash in it is correct UTF-8 in a browser and a replacement
+  # character on a console at a legacy code page, and a recognisable
+  # machine-written register besides. A style rule with no control is a
+  # suggestion, so the rule is a job.
+  #
+  # The two exemptions are not a style choice: they are vendored byte copies
+  # compared against a private source, and editing either to satisfy this job
+  # would trade a passing job for a failing comparison elsewhere.
+  #
+  # Asserted over `git ls-files`, not a hand-kept list, so it holds for a file
+  # nobody has written yet. Not a required check; advisory red.
+  ascii:
+    name: ascii
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Every tracked file is ASCII, vendored copies excepted
+        run: |
+          set -euo pipefail
+          bad=0
+          while IFS= read -r f; do
+            case "$f" in
+              scripts/check_closing_keywords.py|scripts/test_check_closing_keywords.py) continue ;;
+            esac
+            if LC_ALL=C grep -q -P '[^\x00-\x7F]' "$f"; then
+              echo "::error file=$f::non-ASCII byte in a published file"
+              LC_ALL=C grep -n -P '[^\x00-\x7F]' "$f" | head -5
+              bad=1
+            fi
+            if LC_ALL=C grep -q -P '\r' "$f"; then
+              echo "::error file=$f::CR byte; line endings are LF"
+              bad=1
+            fi
+          done < <(git ls-files)
+          exit "$bad"
