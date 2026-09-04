@@ -237,9 +237,11 @@ jobs:
   # machine-written register besides. A style rule with no control is a
   # suggestion, so the rule is a job.
   #
-  # The two exemptions are not a style choice: they are vendored byte copies
-  # compared against a private source, and editing either to satisfy this job
-  # would trade a passing job for a failing comparison elsewhere.
+  # No exemptions. The two vendored guard files were exempt until their
+  # source was scrubbed (workbench, 2026-09-04); a vendored copy is compared
+  # byte-for-byte against that source, so the fix for a non-ASCII byte in one
+  # is at the source, never here, and this job is what says a re-vendor
+  # brought one in.
   #
   # Asserted over `git ls-files`, not a hand-kept list, so it holds for a file
   # nobody has written yet. Not a required check; advisory red.
@@ -249,14 +251,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Every tracked file is ASCII, vendored copies excepted
+      - name: Every tracked file is ASCII
         run: |
           set -euo pipefail
           bad=0
           while IFS= read -r f; do
-            case "$f" in
-              scripts/check_closing_keywords.py|scripts/test_check_closing_keywords.py) continue ;;
-            esac
             if LC_ALL=C grep -q -P '[^\x00-\x7F]' "$f"; then
               echo "::error file=$f::non-ASCII byte in a published file"
               LC_ALL=C grep -n -P '[^\x00-\x7F]' "$f" | head -5

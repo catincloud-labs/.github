@@ -76,9 +76,10 @@ own, in its own tree.
 
 - **Line endings are LF everywhere**, enforced by `.gitattributes`. This is
   authored on Windows; do not let CRLF in.
-- **Every authored file is ASCII.** The two vendored guard files are exempt
-  because they are byte copies compared against their source, not files written
-  here; the `ascii` job names them.
+- **Every tracked file is ASCII**, the vendored guard files included. They were
+  exempt until 2026-09-04, when their source was scrubbed; a byte copy is fixed
+  at its source, so a non-ASCII byte arriving in one now reads as a defect in
+  the source that the `ascii` job here is the first to see.
 - **`scripts/` holds vendored byte copies** of the organisation's shared
   guards, present so the local hook works offline and so the required checks
   can run in a public repository that cannot call the private shared action. A
