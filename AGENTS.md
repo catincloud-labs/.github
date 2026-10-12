@@ -53,6 +53,11 @@ own, in its own tree.
 - **The whole file is reviewed before every publish, not the diff.** A
   sentence that was fine last time can be made false by what was published or
   changed elsewhere since. The checklist at the end of this file is the pass.
+- **The same boundary holds for what this repository's pull requests carry:**
+  bodies, review comments and commit messages name no private repository,
+  issue or record, and quote nothing a stranger cannot reproduce. A reference
+  of the `owner/repo#N` form that the shared change workflow teaches is one
+  only to public work here.
 
 ## Verification method
 
