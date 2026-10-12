@@ -81,6 +81,19 @@ moves stand behind that rule, each paid for in this organisation:
 - **A title is a git artifact. PR titles take the commit form**
   `type(scope): summary`: lowercase after the colon, one clause, no trailing
   period. A PR title becomes the merge commit. The `pr title` job judges it.
+  - Passing the guard is not the convention. The owner reads the title, so it
+    is clear and concise, not a thesis: it says what was done to what, in plain
+    words and the diff's own nouns, with no contrast clause, no *no X*
+    phrasing, no identifier the change itself introduces in the lead, and no
+    imperative the owner could take as addressed to them. A title about an
+    agent rule names the artifact and the actor. A `fix:` title names the
+    process that misbehaves today, its actor, and what it does after the
+    change. An `argument:` title is *whether X*, X being the decision in the
+    governing document's words. A filing in a repository outside the
+    organisation keeps this form as closely as that repository allows. A pull
+    request is retitled rather than a pushed commit amended. Ruled by the owner
+    from 2026-10-08 to 2026-10-10. In practice titles run about 70 characters,
+    and measuring the length before creating one catches a title over the cap.
 - **Never put a `close` / `fix` / `resolve` verb immediately before `#N`** in a
   commit message or PR body unless you mean it, including in a sentence
   warning against doing it and including inside backticks. Only adjacency
