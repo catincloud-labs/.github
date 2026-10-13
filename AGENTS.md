@@ -19,12 +19,13 @@ the organisation. That reach is the reason the next section exists.
 
 **No default community health file may ever be added here.** Not at the root,
 not under `.github/`, not under `docs/`: no `CODE_OF_CONDUCT`, `CONTRIBUTING`,
-`SECURITY`, `SUPPORT`, `PULL_REQUEST_TEMPLATE` (file or directory),
-`ISSUE_TEMPLATE`, `FUNDING.yml` or `DISCUSSION_TEMPLATE/`. No
-`workflow-templates/` either. Each would be inherited by every repository in
-the organisation that lacks its own, private repositories included, with no
-notice in those repositories. Shared files travel by the organisation's
-template repository, and that is a decision, not an oversight.
+`SECURITY`, `SUPPORT`, `ACCESSIBILITY`, `PULL_REQUEST_TEMPLATE` (file or
+directory), `ISSUE_TEMPLATE`, `FUNDING.yml`, `VULNERABILITY_REPORT.yml` (or
+`.yaml`) or `DISCUSSION_TEMPLATE/`. No `workflow-templates/` either. Each would
+be inherited by every repository in the organisation that lacks its own,
+private repositories included, with no notice in those repositories. Shared
+files travel by the organisation's template repository, and that is a
+decision, not an oversight.
 
 The check is mechanical and answers by exit status. It reads
 `git ls-files -z`, so no path reaches it in git's quoted form, and it runs at
@@ -39,12 +40,12 @@ the checkout. On these three it must exit 1 and print a line starting `NO,`
 that names `CONTRIBUTING.md` and `.github/ISSUE_TEMPLATE/bug.md` and not
 `profile/README.md`:
 
-    python -c "import re,subprocess,sys; p=re.compile(r'^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md\Z|/)|^\.github/(FUNDING\.yml\Z|DISCUSSION_TEMPLATE/)|^workflow-templates/',re.I); n=sys.argv[1:] or [f for f in subprocess.run(['git','ls-files','-z'],capture_output=True,check=True).stdout.decode('utf-8').split('\0') if f]; h=[f for f in n if p.search(f)]; ok='profile/README.md' in n and not h; print('yes,' if ok else 'NO,',len(n),'names read, health files',h); sys.exit(0 if ok else 1)" CONTRIBUTING.md .github/ISSUE_TEMPLATE/bug.md profile/README.md
+    python -c "import re,subprocess,sys; p=re.compile(r'^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|ACCESSIBILITY|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md\Z|/)|^\.github/(FUNDING\.yml\Z|VULNERABILITY_REPORT\.ya?ml\Z|DISCUSSION_TEMPLATE/)|^workflow-templates/',re.I); n=sys.argv[1:] or [f for f in subprocess.run(['git','ls-files','-z'],capture_output=True,check=True).stdout.decode('utf-8').split('\0') if f]; h=[f for f in n if p.search(f)]; ok='profile/README.md' in n and not h; print('yes,' if ok else 'NO,',len(n),'names read, health files',h); sys.exit(0 if ok else 1)" CONTRIBUTING.md .github/ISSUE_TEMPLATE/bug.md profile/README.md
 
 Then run it with no names. Yes is exit 0 and a line starting `yes,`. Anything
 else is a no: a `NO,` line, a traceback, or a shell error.
 
-    python -c "import re,subprocess,sys; p=re.compile(r'^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md\Z|/)|^\.github/(FUNDING\.yml\Z|DISCUSSION_TEMPLATE/)|^workflow-templates/',re.I); n=sys.argv[1:] or [f for f in subprocess.run(['git','ls-files','-z'],capture_output=True,check=True).stdout.decode('utf-8').split('\0') if f]; h=[f for f in n if p.search(f)]; ok='profile/README.md' in n and not h; print('yes,' if ok else 'NO,',len(n),'names read, health files',h); sys.exit(0 if ok else 1)"
+    python -c "import re,subprocess,sys; p=re.compile(r'^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|ACCESSIBILITY|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md\Z|/)|^\.github/(FUNDING\.yml\Z|VULNERABILITY_REPORT\.ya?ml\Z|DISCUSSION_TEMPLATE/)|^workflow-templates/',re.I); n=sys.argv[1:] or [f for f in subprocess.run(['git','ls-files','-z'],capture_output=True,check=True).stdout.decode('utf-8').split('\0') if f]; h=[f for f in n if p.search(f)]; ok='profile/README.md' in n and not h; print('yes,' if ok else 'NO,',len(n),'names read, health files',h); sys.exit(0 if ok else 1)"
 
 A tool that helpfully offers to "add a CONTRIBUTING.md" or "set up issue
 templates" here is proposing an organisation-wide change from inside a page
