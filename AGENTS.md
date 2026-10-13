@@ -246,8 +246,35 @@ it.
 Run over the whole of `profile/README.md` before every publish. Every answer
 must be yes.
 
-1. Is every byte of the file ASCII? `grep -P '[^\x00-\x7F]' profile/README.md`
-   returns nothing.
+1. Is every byte of the file ASCII? Read the answer from the exit status and
+   the line the check prints, never from empty output: empty is also what a
+   check that never ran prints. At a prompt the line is the reading: the check
+   prints `yes,` only where it exits 0, and when it never runs, the status
+   left to read can belong to an earlier command. The check reads bytes, so it
+   needs no locale, and each command here runs as written in Git Bash and in
+   PowerShell. `grep -P` is no substitute: in a Git Bash with no locale set,
+   as an agent's shell is, it exits 2 with empty output on any file, and in
+   the UTF-8 locale a login shell sets, as a Git Bash window is, it passes a
+   byte that is not valid UTF-8.
+
+   Show it a no before trusting its yes. Build a file whose first line is
+   plain ASCII and whose second line is byte 151, an em-dash as PowerShell
+   5.1 `Set-Content` writes it:
+
+       python -c "open('ascii-probe.txt','wb').write(bytes([97,10,151,10]))"
+
+   Run the check on it. It must exit 1 and print a line starting `NO,` and
+   ending `[2]`: the defect named, and the clean line not:
+
+       python -c "import sys; d=open(sys.argv[1],'rb').read(); bad=[n for n,l in enumerate(d.splitlines(),1) if any(c>127 for c in l)]; ok=bool(d) and not bad; print('yes,' if ok else 'NO,',len(d),'bytes read, non-ASCII on lines',bad); sys.exit(0 if ok else 1)" ascii-probe.txt
+
+   Delete the probe (`rm ascii-probe.txt` runs in either shell), then run the
+   same check on the page. Yes is exit 0 and a line starting `yes,`. Anything
+   else is a no: a `NO,` line (non-ASCII on the lines it names, or an empty
+   file), a traceback, or a shell error.
+
+       python -c "import sys; d=open(sys.argv[1],'rb').read(); bad=[n for n,l in enumerate(d.splitlines(),1) if any(c>127 for c in l)]; ok=bool(d) and not bad; print('yes,' if ok else 'NO,',len(d),'bytes read, non-ASCII on lines',bad); sys.exit(0 if ok else 1)" profile/README.md
+
 2. Does the page contain no number that something outside this file can
    change: no host count, test count, timing, record count, uptime, latency,
    throughput or date-stamped measurement?
