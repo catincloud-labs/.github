@@ -26,9 +26,24 @@ the organisation that lacks its own, private repositories included, with no
 notice in those repositories. Shared files travel by the organisation's
 template repository, and that is a decision, not an oversight.
 
-The check is mechanical and must return nothing, run on `main`:
+The check is mechanical and answers by exit status. It reads `git ls-files`,
+so it runs at the root of a checkout of `main`, and it says yes only where the
+list it read holds `profile/README.md` and no health file: a run in the wrong
+directory, or a read that returned nothing, is a no. As in the checklist's
+item 1, at a prompt the printed line is the reading. Each command runs as
+written in Git Bash and in PowerShell.
 
-    git ls-files | grep -iE '^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md$|/)|^\.github/(FUNDING\.yml$|DISCUSSION_TEMPLATE/)'
+Show it a no before trusting its yes. Given names, it reads them instead of
+the checkout. On these three it must exit 1 and print a line starting `NO,`
+that names `CONTRIBUTING.md` and `.github/ISSUE_TEMPLATE/bug.md` and not
+`profile/README.md`:
+
+    python -c "import re,subprocess,sys; p=re.compile(r'^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md\Z|/)|^\.github/(FUNDING\.yml\Z|DISCUSSION_TEMPLATE/)|^workflow-templates/',re.I); n=sys.argv[1:] or subprocess.run(['git','ls-files'],capture_output=True,text=True,check=True).stdout.splitlines(); h=[f for f in n if p.search(f)]; ok='profile/README.md' in n and not h; print('yes,' if ok else 'NO,',len(n),'names read, health files',h); sys.exit(0 if ok else 1)" CONTRIBUTING.md .github/ISSUE_TEMPLATE/bug.md profile/README.md
+
+Then run it with no names. Yes is exit 0 and a line starting `yes,`. Anything
+else is a no: a `NO,` line, a traceback, or a shell error.
+
+    python -c "import re,subprocess,sys; p=re.compile(r'^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md\Z|/)|^\.github/(FUNDING\.yml\Z|DISCUSSION_TEMPLATE/)|^workflow-templates/',re.I); n=sys.argv[1:] or subprocess.run(['git','ls-files'],capture_output=True,text=True,check=True).stdout.splitlines(); h=[f for f in n if p.search(f)]; ok='profile/README.md' in n and not h; print('yes,' if ok else 'NO,',len(n),'names read, health files',h); sys.exit(0 if ok else 1)"
 
 A tool that helpfully offers to "add a CONTRIBUTING.md" or "set up issue
 templates" here is proposing an organisation-wide change from inside a page
