@@ -36,11 +36,11 @@ item 1, at a prompt the printed line is the reading. Each command runs as
 written in Git Bash and in PowerShell.
 
 Show it a no before trusting its yes. Given names, it reads them instead of
-the checkout. On these three it must exit 1 and print a line starting `NO,`
-that names `CONTRIBUTING.md` and `.github/ISSUE_TEMPLATE/bug.md` and not
-`profile/README.md`:
+the checkout. On these four it must exit 1 and print a line starting `NO,`
+that names `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/bug.md` and
+`.github/VULNERABILITY_REPORT.yml`, and not `profile/README.md`:
 
-    python -c "import re,subprocess,sys; p=re.compile(r'^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|ACCESSIBILITY|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md\Z|/)|^\.github/(FUNDING\.yml\Z|VULNERABILITY_REPORT\.ya?ml\Z|DISCUSSION_TEMPLATE/)|^workflow-templates/',re.I); n=sys.argv[1:] or [f for f in subprocess.run(['git','ls-files','-z'],capture_output=True,check=True).stdout.decode('utf-8').split('\0') if f]; h=[f for f in n if p.search(f)]; ok='profile/README.md' in n and not h; print('yes,' if ok else 'NO,',len(n),'names read, health files',h); sys.exit(0 if ok else 1)" CONTRIBUTING.md .github/ISSUE_TEMPLATE/bug.md profile/README.md
+    python -c "import re,subprocess,sys; p=re.compile(r'^(\.github/|docs/)?(CODE_OF_CONDUCT|CONTRIBUTING|SECURITY|SUPPORT|ACCESSIBILITY|PULL_REQUEST_TEMPLATE|ISSUE_TEMPLATE)(\.md\Z|/)|^\.github/(FUNDING\.yml\Z|VULNERABILITY_REPORT\.ya?ml\Z|DISCUSSION_TEMPLATE/)|^workflow-templates/',re.I); n=sys.argv[1:] or [f for f in subprocess.run(['git','ls-files','-z'],capture_output=True,check=True).stdout.decode('utf-8').split('\0') if f]; h=[f for f in n if p.search(f)]; ok='profile/README.md' in n and not h; print('yes,' if ok else 'NO,',len(n),'names read, health files',h); sys.exit(0 if ok else 1)" CONTRIBUTING.md .github/ISSUE_TEMPLATE/bug.md .github/VULNERABILITY_REPORT.yml profile/README.md
 
 Then run it with no names. Yes is exit 0 and a line starting `yes,`. Anything
 else is a no: a `NO,` line, a traceback, or a shell error.
