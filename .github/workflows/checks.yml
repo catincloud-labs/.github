@@ -238,13 +238,24 @@ jobs:
   # suggestion, so the rule is a job.
   #
   # No exemptions. The two vendored guard files were exempt until their
-  # source was scrubbed (workbench, 2026-09-04); a vendored copy is compared
+  # source was scrubbed (2026-09-04); a vendored copy is compared
   # byte-for-byte against that source, so the fix for a non-ASCII byte in one
   # is at the source, never here, and this job is what says a re-vendor
   # brought one in.
   #
   # Asserted over `git ls-files`, not a hand-kept list, so it holds for a file
   # nobody has written yet. Not a required check; advisory red.
+  #
+  # The bytes are read in Python, not asked of `grep`. This job used to test
+  # each file with `if grep -q -P ...; then`, and an `if` takes grep's exit
+  # status 2, an error, exactly as it takes 1, no match: a file grep could not
+  # open, or a pattern it could not run, read as clean and the job went green.
+  # Here a file that cannot be read is a defect, and so is a file list without
+  # the page. Before the tree is read, probes of an em-dash, a CRLF and a path
+  # that does not exist go through the same judgement as the tree, beside a
+  # clean probe. The job's exit status is beyond their reach: a red run on a
+  # planted tree is its reading. File names are escaped before they reach a
+  # workflow command, so a name cannot end the command or add a property.
   ascii:
     name: ascii
     runs-on: ubuntu-latest
@@ -252,18 +263,81 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Every tracked file is ASCII
+        shell: python
         run: |
-          set -euo pipefail
-          bad=0
-          while IFS= read -r f; do
-            if LC_ALL=C grep -q -P '[^\x00-\x7F]' "$f"; then
-              echo "::error file=$f::non-ASCII byte in a published file"
-              LC_ALL=C grep -n -P '[^\x00-\x7F]' "$f" | head -5
-              bad=1
-            fi
-            if LC_ALL=C grep -q -P '\r' "$f"; then
-              echo "::error file=$f::CR byte; line endings are LF"
-              bad=1
-            fi
-          done < <(git ls-files)
-          exit "$bad"
+          import os
+          import subprocess
+          import sys
+          import tempfile
+
+
+          def scan(path):
+              """Lines holding a byte over 127, and lines holding a CR."""
+              with open(path, "rb") as fh:
+                  lines = fh.read().split(b"\n")
+              high = [n for n, line in enumerate(lines, 1) if any(c > 127 for c in line)]
+              cr = [n for n, line in enumerate(lines, 1) if b"\r" in line]
+              return high, cr
+
+
+          def escape(text, prop=False):
+              """A workflow command's escaping; a property also escapes : and ,."""
+              text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+              return text.replace(":", "%3A").replace(",", "%2C") if prop else text
+
+
+          def judge(paths, emit):
+              """Count the defects in the files named, passing one annotation per defect to emit."""
+              bad = 0
+              for f in paths:
+                  name = escape(f, prop=True)
+                  try:
+                      high, cr = scan(f)
+                  except OSError as err:
+                      emit(f"::error file={name}::not read, so not shown to be ASCII: {escape(str(err.strerror))}")
+                      bad += 1
+                      continue
+                  if high:
+                      emit(f"::error file={name},line={high[0]}::non-ASCII byte in a published file, lines {high[:5]}")
+                      bad += 1
+                  if cr:
+                      emit(f"::error file={name},line={cr[0]}::CR byte; line endings are LF, lines {cr[:5]}")
+                      bad += 1
+              return bad
+
+
+          def refuse(message):
+              print(f"::error::{escape(message)}")
+              sys.exit(1)
+
+
+          # Both arms before the tree, through the same judgement: each defect
+          # probe must count one defect, on line 2 where it has lines, and the
+          # clean probe none. The unreadable probe is never written.
+          with tempfile.TemporaryDirectory() as tmp:
+              for name, data, want in [
+                  ("em-dash", b"plain\nem\xe2\x80\x94dash\n", "line=2::non-ASCII byte"),
+                  ("crlf", b"plain\ncrlf\r\n", "line=2::CR byte"),
+                  ("unreadable", None, "::not read"),
+                  ("clean", b"plain\nplain\n", None),
+              ]:
+                  probe = os.path.join(tmp, name)
+                  if data is not None:
+                      with open(probe, "wb") as fh:
+                          fh.write(data)
+                  heard = []
+                  count = judge([probe], heard.append)
+                  if count != (1 if want else 0) or len(heard) != count or (want and want not in heard[0]):
+                      refuse(f"calibration: the {name} probe counted {count} defects: {heard}")
+          print("calibration: em-dash and CRLF counted on line 2, unreadable path counted, clean probe clean")
+
+          # An empty list is also what a failed or misdirected read returns, so
+          # the list must hold the page before its silence means anything.
+          listed = subprocess.run(["git", "ls-files", "-z"], check=True, capture_output=True).stdout
+          files = [os.fsdecode(name) for name in listed.split(b"\0") if name]
+          if "profile/README.md" not in files:
+              refuse(f"git ls-files gave {len(files)} names and not profile/README.md; the tree was not read")
+
+          bad = judge(files, print)
+          print(f"{len(files)} tracked files read, {bad} defects")
+          sys.exit(1 if bad else 0)
