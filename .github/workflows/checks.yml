@@ -63,6 +63,8 @@ permissions:
 #   scripts/check_pr_title.py
 #   scripts/check_third_party_pins.py
 #   scripts/test_check_third_party_pins.py
+#   scripts/check_pull_request_target.py
+#   scripts/pull_request_target_requirements.txt
 #   .github/markdownlint.json
 #
 # So do NOT edit those files to suit local taste. They are copies, they are
@@ -187,6 +189,11 @@ jobs:
   # private shared repository, compared from the private side like the other
   # vendored files -- do not edit it here. The self-test runs first, so a
   # checker that silently stopped detecting anything cannot pass a title.
+  #
+  # Each non-merge commit in the pull request is judged too, since a pull
+  # request here merges with a merge commit and every commit on its branch
+  # lands on `main` as written: its subject by the title's form rules,
+  # without the 100-character cap, and a body beyond its trailers.
   pr-title:
     name: pr title
     if: github.event_name == 'pull_request'
@@ -197,14 +204,34 @@ jobs:
       - name: Guard fires and goes quiet
         run: python scripts/check_pr_title.py --self-test
 
+      # REST rather than `gh pr view --json commits`: the listing carries each
+      # commit's parents, which is how a merge commit is told apart and
+      # skipped, and the whole message. It lists at most 250 commits; the
+      # event's count and head are passed beside it, so a longer pull request,
+      # a listing that stopped early, or a branch that moved after the event is
+      # refused as unread rather than judged on what was seen.
+      - name: Read the pull request's commits
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/commits?per_page=100" \
+            --jq '.[] | {sha, parents: (.parents | length), message: .commit.message}' \
+            > "$RUNNER_TEMP/pr-title-commits.jsonl"
+
       # The title reaches the script through the environment, never
       # interpolated into shell -- a title is attacker-adjacent text on a
       # public repository.
-      - name: Judge the title
+      - name: Judge the title and the commits
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-        run: python scripts/check_pr_title.py --title "$PR_TITLE" --author "$PR_AUTHOR"
+          PR_COMMITS: ${{ github.event.pull_request.commits }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python scripts/check_pr_title.py --title "$PR_TITLE" --author "$PR_AUTHOR" \
+            --commits "$RUNNER_TEMP/pr-title-commits.jsonl" \
+            --commits-expected "$PR_COMMITS" --head-sha "$PR_HEAD"
 
   # Every third-party action ref in this tree is a forty-character commit with
   # its version as a trailing comment, from a publisher the organisation has
