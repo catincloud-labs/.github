@@ -14,7 +14,8 @@ the organisation that lacks its own, silently. That absence is a decision, not
 an omission, and `AGENTS.md` names it as the rule that matters most here.
 
 To propose a change: branch, edit, open a pull request. Two checks are
-required, named `markdown` and `closing keywords`; three more are advisory.
+required, named `markdown` and `closing keywords`; the other jobs in
+`.github/workflows/checks.yml` are advisory.
 Enable the local commit-msg hook once per clone so the second required check
 fails on your machine rather than in CI:
 

@@ -208,7 +208,10 @@ everywhere or nowhere. Nothing checks it.
   guards, present so the local hook works offline and so the required checks
   can run in a public repository that cannot call the private shared action. A
   job on the private side compares them against their source and fails on
-  drift. **Never edit them here**; fix the source and re-vendor.
+  drift. **Never edit them by hand here**; fix the source and re-vendor. The
+  one edit made here is Dependabot's: its `pip` entry moves the PyYAML pin in
+  `scripts/pull_request_target_requirements.txt`, and the copy then reads as
+  drifted until its source moves to the same version.
 - **Markdown lint configuration lives at `.github/markdownlint.json`**, not at
   the root, and is always passed with `--config` explicitly. A root
   `.markdownlint.json` is auto-discovered and would read as this repository
@@ -217,7 +220,8 @@ everywhere or nowhere. Nothing checks it.
 
       npx -y markdownlint-cli2 --config .github/markdownlint.json '*.md' '.github/**/*.md' 'profile/**/*.md'
 
-- **Dependabot moves the one action pin**, monthly and grouped. Its pull
+- **Dependabot moves the one action pin and the one PyYAML pin**, monthly, the
+  action pin's pull request grouped. Its pull
   requests arrive with organisation-reading checks red under the Dependabot
   actor; the organisation's practice is close-and-reopen so the same commit
   re-runs under the owner, then merge. Do not add a token to the Dependabot
