@@ -1,10 +1,11 @@
 # A third-party action is pinned to a commit, and the pin has a mover. This is
-# the mover. GitHub Actions only, grouped monthly, so a bump is one pull request
+# the mover. GitHub Actions, grouped monthly, so a bump is one pull request
 # a month that a reviewer reads as a diff of commit hashes and version comments;
 # the `third-party pins` job in `checks.yml` is what makes that reading mean
 # something. The shape of this entry is shared across the organisation's
 # repositories and is copied here rather than written; if it drifts from the
-# others, reconcile to theirs.
+# others, reconcile to theirs. The `pip` entry below is the second mover, and
+# says why it exists.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -14,5 +15,19 @@ updates:
     groups:
       github-actions:
         patterns: ["*"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  # `pip`, for `/scripts` only: the `pull request target` job installs the
+  # PyYAML that `scripts/pull_request_target_requirements.txt` pins, and the
+  # pin has a mover. This entry is that mover. The file is a byte-identical
+  # copy of the guard's own manifest, compared from the private side like the
+  # other vendored files, so a bump lands here as a pull request read as a
+  # diff of a version, and the copy reads as drifted until its source moves
+  # too.
+  - package-ecosystem: pip
+    directory: /scripts
+    schedule:
+      interval: monthly
     commit-message:
       prefix: "chore(deps)"
