@@ -210,6 +210,12 @@ jobs:
       # event's count and head are passed beside it, so a longer pull request,
       # a listing that stopped early, or a branch that moved after the event is
       # refused as unread rather than judged on what was seen.
+      #
+      # The listing is read once, with no retry: the shared action wraps the
+      # read in a retry helper this repository does not vendor. So a transient
+      # API error turns this advisory job red, and a re-run reads it again. It
+      # fails closed either way: an error exits non-zero, and a short read is
+      # refused.
       - name: Read the pull request's commits
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
