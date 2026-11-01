@@ -65,8 +65,10 @@ own, in its own tree.
 - **No identifiers into private work.** No hostname, address, credential or
   key name, ruleset or configuration identifier, issue or pull request number,
   or record number. No private repository name: components are described by
-  role. No collaborator name and no client name. The only link into the
-  organisation's own work is the public `dagster-dex` repository.
+  role. No collaborator name and no client name. A link into the
+  organisation's own work goes only to one of its public repositories, read
+  with `gh repo list catincloud-labs --visibility public --json name --jq '.[].name'`,
+  never recalled.
 - **The whole file is reviewed before every publish, not the diff.** A
   sentence that was fine last time can be made false by what was published or
   changed elsewhere since. The checklist at the end of this file is the pass.
@@ -323,10 +325,15 @@ must be yes.
    number, or record number?
 6. Does the page name no collaborator and no client, past or present, and no
    warehouse, schema or table name?
-7. Is the only link into the organisation's own work the public `dagster-dex`
-   repository, and does every other link open without access?
+7. Does every link into the organisation's own work go to one of its public
+   repositories, as the command under *The page's boundary* lists them, and
+   does every other link open without access?
 8. Can every command on the page be run from a clean checkout with no private
-   access, and has that been re-checked since the last change to `dagster-dex`?
+   access, and has that been re-checked since the last change to each of the
+   organisation's repositories the page links? The page vouches for the
+   commands in those repositories' READMEs too, so each one's own CI running
+   its suite green at `main`, or a run of its commands, is part of the
+   re-check.
 9. Does every sentence describe a mechanism or a shape rather than how well it
    works, and has any sentence that drifted toward "how well" been removed
    rather than softened?
