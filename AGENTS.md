@@ -329,8 +329,11 @@ must be yes.
    repositories, as the command under *The page's boundary* lists them, and
    does every other link open without access?
 8. Can every command on the page be run from a clean checkout with no private
-   access, and has that been re-checked since the last change to each
-   repository the page links?
+   access, and has that been re-checked since the last change to each of the
+   organisation's repositories the page links? The page vouches for the
+   commands in those repositories' READMEs too, so each one's own CI running
+   its suite green at `main`, or a run of its commands, is part of the
+   re-check.
 9. Does every sentence describe a mechanism or a shape rather than how well it
    works, and has any sentence that drifted toward "how well" been removed
    rather than softened?
