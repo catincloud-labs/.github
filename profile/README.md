@@ -6,8 +6,8 @@ being built. Building happens, but as the bounded exception. This page
 describes the shape of that platform and the mechanisms it relies on. It does
 not describe how well they perform, on purpose; the reason is at the bottom.
 
-If you read one thing, read the package at the end. It runs from a clean
-checkout with no private access.
+If you read one thing, read one of the packages at the end. Each runs from a
+clean checkout with no private access.
 
 ## The shape
 
@@ -87,17 +87,30 @@ fault-detection-and-recovery, not flight software.
 
 ## What you can run
 
-The public artefact is `dagster-dex`: a Dagster asset graph read as a project
-format for [dex](https://github.com/exmergo/dex), an engine that reads a
-project's declared structure and reports where the warehouse has drifted from
-it. Apache-2.0, on PyPI.
+The public artefacts are below. Every command in either README runs from a
+clean checkout with no private access; if one does not, that is a defect, and
+that repository is where to report it.
+
+`ration` is the contract the coordination store above is held to, and the
+services built on its one operation, compare-and-set: the lease, the pool,
+role addressing and the publication pointer, with the checked message frame
+beside them. It ships with the conformance suite that judges a store,
+including stores written to be wrong on purpose. What it offers is the
+mechanism and that suite, not a guarantee: where its README and its suite
+disagree, the suite is the contract. Apache-2.0. A release is a signed tag,
+installed from a clone at that tag; it is not on a registry, and the package
+of that name on PyPI is an unrelated project. Source, releases and issues are
+at <https://github.com/catincloud-labs/ration>.
+
+`dagster-dex` is a Dagster asset graph read as a project format for
+[dex](https://github.com/exmergo/dex), an engine that reads a project's
+declared structure and reports where the warehouse has drifted from it.
+Apache-2.0, on PyPI.
 
     pip install dagster-dex
 
 Source, issues and the design argument are at
-<https://github.com/catincloud-labs/dagster-dex>. Every command in that README
-runs from a clean checkout with no private access; if one does not, that is a
-defect, and the README is where to report it.
+<https://github.com/catincloud-labs/dagster-dex>.
 
 ## Who
 
