@@ -101,9 +101,10 @@ written to be wrong on purpose. What it offers is the mechanism and that
 suite, not a guarantee: where its README and its suite disagree, the suite is
 the contract. Apache-2.0.
 
-A release is a signed tag, installed from a clone at that tag. It is not on a
-registry, and the package of that name on PyPI is an unrelated project.
-Source, releases and issues are at
+A release is a signed tag. From `v0.2.1` on, it is on PyPI as
+`catincloud-ration`: `pip install catincloud-ration`. An earlier release
+installs from a clone at its tag. The package named `ration` on PyPI is an
+unrelated project. Source, releases and issues are at
 <https://github.com/catincloud-labs/ration>.
 
 `crosslink` reduces an orchestrated asset graph to a project format, and
