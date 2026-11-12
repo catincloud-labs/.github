@@ -108,14 +108,20 @@ unrelated project. Source, releases and issues are at
 <https://github.com/catincloud-labs/ration>.
 
 `crosslink` reduces an orchestrated asset graph to a project format, and
-holds the write path back: a change is proposed against the code and verified
-against the reduction it claims to change. It ships the contract a project
-format is judged by, with formats built to fail it. What it offers is the
-package, that contract and the suite, not a guarantee. Apache-2.0.
+holds the write path back to it: a change is proposed against the code and
+verified against the reduction it claims to change. It ships the contract a
+project format is judged by, with formats built to fail it. What it offers is
+the package, that contract and its test suite, not a guarantee. Apache-2.0.
 
-It is on PyPI as `catincloud-crosslink`: `pip install catincloud-crosslink`.
-The package named `crosslink` there is an unrelated project. Source and issues
-are at <https://github.com/catincloud-labs/crosslink>.
+It is on PyPI as `catincloud-crosslink`, and the `conformance` extra adds
+what the contract needs. The package named `crosslink` there is an
+unrelated project.
+
+    pip install catincloud-crosslink
+    pip install "catincloud-crosslink[conformance]"
+
+Source, releases and issues are at
+<https://github.com/catincloud-labs/crosslink>.
 
 `dagster-dex` is a Dagster asset graph read as a project format for
 [dex](https://github.com/exmergo/dex), an engine that reads a project's
