@@ -87,7 +87,7 @@ fault-detection-and-recovery, not flight software.
 
 ## What you can run
 
-The public artefacts are below. Every command in either README runs from a
+The public artefacts are below. Every command in each README runs from a
 clean checkout with no private access; if one does not, that is a defect, and
 that repository is where to report it.
 
@@ -105,6 +105,16 @@ A release is a signed tag, installed from a clone at that tag. It is not on a
 registry, and the package of that name on PyPI is an unrelated project.
 Source, releases and issues are at
 <https://github.com/catincloud-labs/ration>.
+
+`crosslink` reduces an orchestrated asset graph to a project format, and
+holds the write path back: a change is proposed against the code and verified
+against the reduction it claims to change. It ships the contract a project
+format is judged by, with formats built to fail it. What it offers is the
+package, that contract and the suite, not a guarantee. Apache-2.0.
+
+It is on PyPI as `catincloud-crosslink`: `pip install catincloud-crosslink`.
+The package named `crosslink` there is an unrelated project. Source and issues
+are at <https://github.com/catincloud-labs/crosslink>.
 
 `dagster-dex` is a Dagster asset graph read as a project format for
 [dex](https://github.com/exmergo/dex), an engine that reads a project's
