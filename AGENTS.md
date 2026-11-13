@@ -127,7 +127,7 @@ moves stand behind that rule, each paid for in this organisation:
   Enable the hook per clone: `git config core.hooksPath .githooks`.
 - **Merges are made by the owner.** With one code owner the review requirement
   cannot be satisfied (an author cannot approve their own pull request), so
-  every merge is an owner bypass. `.github/CODEOWNERS` says so in full.
+  every merge is an owner bypass.
 
 ### Merging, the cold review and the record
 
