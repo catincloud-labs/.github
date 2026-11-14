@@ -119,11 +119,14 @@ moves stand behind that rule, each paid for in this organisation:
     from 2026-10-08 to 2026-10-10. In practice titles run about 70 characters,
     and measuring the length before creating one catches a title over the cap.
 - **Never put a `close` / `fix` / `resolve` verb immediately before `#N`** in a
-  commit message or PR body unless you mean it, including in a sentence
-  warning against doing it and including inside backticks. Only adjacency
-  fires, so "part of #N" and "refs #N" are safe. When you do mean it, add an
-  `Autoclose: #N` trailer. The guard runs as a `commit-msg` hook and again in
-  CI over the PR body, the commits, and GitHub's own `closingIssuesReferences`.
+  commit message, PR title or PR body unless you mean it, including in a
+  sentence warning against doing it and including inside backticks. Only
+  adjacency fires, so "part of #N" and "refs #N" are safe. When you do mean
+  it, add an `Autoclose: #N` trailer to the body or the commit. A title
+  becomes the merge commit's message and holds no trailer, so a close in a
+  title is refused outright. The guard runs as a `commit-msg` hook and again
+  in CI over the PR title, the PR body, the commits, and GitHub's own
+  `closingIssuesReferences`.
   Enable the hook per clone: `git config core.hooksPath .githooks`.
 - **Merges are made by the owner.** With one code owner the review requirement
   cannot be satisfied (an author cannot approve their own pull request), so
