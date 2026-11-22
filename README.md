@@ -17,7 +17,10 @@ To propose a change: branch, edit, open a pull request. Two checks are
 required, named `markdown` and `closing keywords`; the other jobs in
 `.github/workflows/checks.yml` are advisory.
 Enable the local commit-msg hook once per clone so the second required check
-fails on your machine rather than in CI:
+fails on your machine rather than in CI. If `git config --get core.hooksPath`
+already prints a hooks directory, keep it and have that directory run
+`.githooks/commit-msg`; the command below would replace it. `AGENTS.md`,
+*Change workflow*, holds the rule. Otherwise run:
 
     git config core.hooksPath .githooks
 
