@@ -127,7 +127,18 @@ moves stand behind that rule, each paid for in this organisation:
   trailer, so a close in a title is refused outright. The guard runs as a `commit-msg` hook and again
   in CI over the PR title, the PR body, the commits, and GitHub's own
   `closingIssuesReferences`.
-  Enable the hook per clone: `git config core.hooksPath .githooks`.
+  Enable the hook per clone - it does not install itself - unless the clone
+  already sets a hooks directory. Read `git config --get core.hooksPath` inside
+  the clone: it reads every scope, so a global setting counts, and it exits 0
+  with the value when one is set and 1 with nothing printed when none is. If it
+  prints a value, keep it: that directory is expected to run
+  `.githooks/commit-msg` itself, and if its `commit-msg` does not, add that
+  call there. Otherwise run `git config core.hooksPath .githooks`. That command
+  sets this clone's value with no warning, replacing a local one and
+  overriding a global one, so on a clone that had a directory it stops every
+  other hook that directory ran here (the precedent is
+  catincloud-labs/dagster-dex#172). This bullet is the rule's one home;
+  `README.md` and the header of `.githooks/commit-msg` point here.
 - **Merges are made by the owner.** With one code owner the review requirement
   cannot be satisfied (an author cannot approve their own pull request), so
   every merge is an owner bypass.
