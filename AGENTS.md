@@ -104,7 +104,8 @@ moves stand behind that rule, each paid for in this organisation:
 - **Conventional commits** (`docs:`, `chore:`, ...) with a body explaining why.
 - **A title is a git artifact. PR titles take the commit form**
   `type(scope): summary`: lowercase after the colon, one clause, no trailing
-  period. A PR title becomes the merge commit. The `pr title` job judges it.
+  period. A PR title becomes the squash commit's subject. The `pr title` job
+  judges it.
   - Passing the guard is not the convention. The owner reads the title, so it
     is clear and concise, not a thesis: it says what was done to what, in plain
     words and the diff's own nouns, with no contrast clause, no *no X*
@@ -123,7 +124,7 @@ moves stand behind that rule, each paid for in this organisation:
   including in a sentence warning against doing it and including inside
   backticks. Only adjacency fires, so "part of #N" and "refs #N" are safe.
   When you do mean it, add an `Autoclose: #N` trailer to the body or the
-  commit. A title becomes part of the merge commit's message and holds no
+  commit. A title becomes the squash commit's subject and holds no
   trailer, so a close in a title is refused outright. The guard runs as a `commit-msg` hook and again
   in CI over the PR title, the PR body, the commits, and GitHub's own
   `closingIssuesReferences`.
