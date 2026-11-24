@@ -104,8 +104,8 @@ moves stand behind that rule, each paid for in this organisation:
 - **Conventional commits** (`docs:`, `chore:`, ...) with a body explaining why.
 - **A title is a git artifact. PR titles take the commit form**
   `type(scope): summary`: lowercase after the colon, one clause, no trailing
-  period. A PR title becomes the squash commit's subject. The `pr title` job judges
-  it.
+  period. A PR title becomes the squash commit's subject. The `pr title` job
+  judges it.
   - Passing the guard is not the convention. The owner reads the title, so it
     is clear and concise, not a thesis: it says what was done to what, in plain
     words and the diff's own nouns, with no contrast clause, no *no X*
